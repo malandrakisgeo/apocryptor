@@ -1,25 +1,22 @@
 #### Some background
-<small>It all began as a game. The plan was to create a cipher that yields a completely different ciphertext
+<sup>It all began as a game. The plan was to create a cipher that yields a completely different ciphertext
 for every change in the input, with a result as random as a message digest.
 
-The first step towards a cipher was a key derivation function. Hence the katakerm algorithm,
-which has the basic properties of a hash function. Crafting it helped me comprehend one basic mechanism behind
-every good hash function: cascading every difference of the input everywhere on the output.
+<sup>The first step towards a cipher was a key derivation function. Hence the [katakerm algorithm](https://github.com/malandrakisgeo/katakerm)
+which has the basic properties of a hash function. Crafting it helped me comprehend the basic mechanism behind hashing: cascading every difference of the input everywhere on the output.
 
-That was my eureka! moment for the cipher: even the slightest change of a single bit
-should yield a completely different result, i.e. it should be *cascaded* everywhere on the output.
-It should just happen in a manner that does not hinder the retrieval of the original value.
+<sup>That was my eureka! moment for the cipher: even the slightest change of a single bit should yield a completely different result, i.e. it should be *cascaded* everywhere on the output.
+But unlike in hash functions, it should be done in a way that does not hinder the retrieval of the original plaintext.
 
-After some weeks of trial and error, a couple of plans that were as doomed as the Coyote's, and 
-several unexpected eureka! moments, my solution evolved to this:
-a CBC structure with the message digest of both the plaintext and the password as initialization vector, and then just... well, just any cipher as usual.
-Even a simple XOR operation might suffice.</small>
+<sup>After some weeks of trial and error, a couple of plans that were as doomed as the Coyote's, and several unexpected eureka! moments, my solution evolved to this:
+a CBC structure with the message digest of both the plaintext and the password as initialization vector, and then just... well, just any byte-by-byte modification of the input.
+Even a simple XOR operation might suffice.
 
 
 ### An unbreakable (?) mode of encryption
 #### and a sample implementation of it
 
-The mode is surprisingly simple, though properly implementing it may require tremendous efforts:
+The mode is surprisingly simple, though flawlessly implementing it may require tremendous efforts:
 
 ![Encryption mode](cbc-encryption.png?raw=true)
 
