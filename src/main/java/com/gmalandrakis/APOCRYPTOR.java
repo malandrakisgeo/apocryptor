@@ -12,7 +12,9 @@ import static com.gmalandrakis.chaffing.KeyBasedChaffing.insert;
 import static com.gmalandrakis.chaffing.KeyBasedWinnowing.winnow;
 import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 import static com.gmalandrakis.utils.Utils.*;
-
+/**
+ *  Copyright (C) 2025 Georgios Malandrakis <malandrakisgeo@gmail.com>
+ */
 public class APOCRYPTOR {
     final static String sourceFilename = "ENCRYPT_ME";
     final static String encryptedWithoutChaffing = "ENCRYPTED_NO_CHAFFING";
@@ -58,7 +60,7 @@ public class APOCRYPTOR {
 
         System.out.println("Original file contents: " + Arrays.toString(original));
 
-        System.out.println("Encrypted file contents: " +Arrays.toString(encrypted));
+        System.out.println("Encrypted file contents: " + Arrays.toString(encrypted));
         System.out.println("Recovered file contents: " + Arrays.toString(decrypted));
 
         finalEncryption.close();

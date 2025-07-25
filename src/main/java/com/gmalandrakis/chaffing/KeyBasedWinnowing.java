@@ -18,7 +18,6 @@ public class KeyBasedWinnowing {
         FileChannel sourceChannel = source.getChannel();
         FileChannel targetChannel = dest.getChannel();
         long totalSum = Arrays.stream(positions).sum();
-        System.out.println(source.length());
         if (totalSum >= source.length() - 32) {
             positions = adjustChaffingPositions(positions, source.length() - 32);
         }

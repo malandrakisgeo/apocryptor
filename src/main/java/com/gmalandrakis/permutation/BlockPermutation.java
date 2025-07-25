@@ -7,6 +7,10 @@ import static com.gmalandrakis.permutation.PermutationAlgorithm.permuteArraysByK
 import static com.gmalandrakis.permutation.PermutationAlgorithm.unpermuteArraysByKey;
 import static com.gmalandrakis.utils.Utils.flattenPerm;
 
+/**
+ *
+ * @author George Malandrakis (malandrakisgeo@gmail.com)
+ */
 public class BlockPermutation {
     private static final int CHUNK_SIZE_IN_BYTES = 32;
 

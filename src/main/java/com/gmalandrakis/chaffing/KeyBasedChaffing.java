@@ -7,7 +7,9 @@ import java.util.Arrays;
 
 import static com.gmalandrakis.utils.Utils.adjustChaffingPositions;
 
-
+/**
+ * @author George Malandrakis (malandrakisgeo@gmail.com)
+ */
 public class KeyBasedChaffing {
 
 

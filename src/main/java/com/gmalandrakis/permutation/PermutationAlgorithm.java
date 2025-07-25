@@ -6,7 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 
-
+/**
+ * @author George Malandrakis (malandrakisgeo@gmail.com)
+ */
 public class PermutationAlgorithm {
 
     /*
@@ -25,7 +27,7 @@ public class PermutationAlgorithm {
         for (byte b : key) {
             var i = (int) b;
             cinco = positions.contains(i) ? cinco + 1 : 0;
-            if (cinco == 5) {
+            if (cinco == 3) {
                 return permuteArrayByKey(inputArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(i);
@@ -60,6 +62,7 @@ public class PermutationAlgorithm {
                 outputArray[++outputArrayPos] = inputArray[index + 1];
                 i += 3;
             }
+            //TODO consecutive==4 and even five. Four equal bytes among 32 from a pool of 255 is a lot more common scenario than it feels (the mechanism is the same as behind the birthday paradox)
 
             ++outputArrayPos;
         }
@@ -83,7 +86,7 @@ public class PermutationAlgorithm {
         for (byte b : key) {
             var i = (int) b;
             cinco = positions.contains(i) ? cinco + 1 : 0;
-            if (cinco == 4) {
+            if (cinco == 3) {
                 return unpermuteArrayByKey(permutedArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(b);

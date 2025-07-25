@@ -20,17 +20,17 @@ The mode is surprisingly simple, though flawlessly implementing it can be very d
 
 ![Encryption mode](cbc-encryption.png?raw=true)
 
-The first step of the encryption is to get the message digest of the plaintext. 
-It can then either be stored somewhere and be given by the user as input along with the key, 
+The first step of the encryption is to get the message digest (or hash, as it is often referred to) of the plaintext. 
+It will be used as an input to the block cipher, and can then either be stored somewhere and be given by the user as input along with the key, 
 or be chaffed (dispersed) through the ciphertext only to be winnowed (retrieved and removed) before the decryption,
 or even just be pasted as is in a header. No matter the approach, in a good cipher, knowing the original digest without knowing the password should be of no value.
 
-Using the file's digest as an Initialization Vector (or simply as a complement of the key) makes sure that every change on the plaintext, 
+Using the file's digest in that way makes sure that every change on the plaintext, 
 however insignificant, is cascaded onto all the ciphertext in a chaotic manner.  And no matter how many plaintexts you encrypt with the same main key, 
 they always appear as random as if they were just digests. Many major forms of cryptanalysis are already rendered useless.
 
 The second step is to use the digest and the key to encrypt the first block. The first block could
-use separate cipher or pad-generator, using the key and the digest to generate a unique pad of equal length to the block (as APOCRYPTOR does). 
+use a pad-generator along with a regular cipher, using the key and the digest to generate a unique pad of equal length to the block (as APOCRYPTOR does). 
 Unless there is a flaw in the underlying hash function, this pad is in practice unique for every plaintext. If
 the block cipher is sufficiently complex, it should suffice with no need for a pad generator for the first block.
 
@@ -38,8 +38,8 @@ The third step, after encrypting the first block and saving it, is getting a key
 and use it as input to the block cipher -either as a simple XOR operation, or with any more complex algorithm.
 
 One could, of course, save the shuffled ciphertext in the encrypted file,  but this could weaken the algorithm:
-it would allow an attacker to know exactly which input was used for the next block. 
-Using a key-based permutation of the ciphertext rather than the ciphertext itself, is essential to prevent attacks.
+it would give an attacker knowledge of an input was used for a block. 
+Using a key-based permutation of the ciphertext rather than the ciphertext itself, is essential to hinder attacks.
 
 The keys used for each block may differ (e.g. n-th digest of the original key for the n-th block),
 but it is not necessary.  The key(s) used for shuffling could be derived from the combination of the digest and the password as well, hence making the shuffling
