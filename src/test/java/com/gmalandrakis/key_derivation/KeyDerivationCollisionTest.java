@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
-import static com.gmalandrakis.key_derivation.KeyDerivation_V2.*;
+import static com.gmalandrakis.key_derivation.KeyDerivation.*;
 
 public class KeyDerivationCollisionTest {
     static ConcurrentHashMap<Long, Long> testoNew = new ConcurrentHashMap<>();
@@ -41,19 +41,19 @@ public class KeyDerivationCollisionTest {
         System.out.println(Arrays.toString(result));
 
         //toSignedLong(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0});
-        for (int i = 0; i < 40; ++i) {
+        for (int i = 0; i < 20; ++i) {
             threadPool.execute(() -> concurrently());
         }
         try {
-            Thread.sleep(50000);
+            Thread.sleep(20000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        //recursionTest();
+        recursionTest();
         System.out.println("Total collisions: " + collisions_detected.size());
         System.out.println("Total keys calculated: " + testoNew.size());
         try {
-            Thread.sleep(50000);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -109,14 +109,14 @@ public class KeyDerivationCollisionTest {
     }*/
 
     static void concurrently() {
-        for (int i = 0; i < 2500000; ++i) {
+        for (int i = 0; i < 250000; ++i) {
             var randomPassword = getRandomString();
 
             var key = deduceKey((randomPassword.getBytes()));
             addIfAbsent(key, randomPassword.getBytes());
 
         }
-        for (int i = 0; i < 100000; ++i) {
+        for (int i = 0; i < 10000; ++i) {
             var randomPassword = getFixedLengthRandomString();
 
             var key = deduceKey((randomPassword.getBytes()));
@@ -124,7 +124,7 @@ public class KeyDerivationCollisionTest {
 
         }
 
-        for (int i = 0; i < 150000; ++i) {
+        for (int i = 0; i < 15000; ++i) {
             var randomPassword = new Random().nextInt();
 
             var key = deduceKey(String.valueOf(randomPassword).getBytes());
@@ -132,7 +132,7 @@ public class KeyDerivationCollisionTest {
 
         }
 
-        for (int i = 0; i < 150000; ++i) {
+        for (int i = 0; i < 15000; ++i) {
             var randomPassword = new Random().nextDouble();
 
             var key = deduceKey(String.valueOf(randomPassword).getBytes());

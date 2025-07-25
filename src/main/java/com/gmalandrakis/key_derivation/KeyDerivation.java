@@ -1,16 +1,18 @@
-package com.gmalandrakis.key_derivation.archive;
+package com.gmalandrakis.key_derivation;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static com.gmalandrakis.utils.Utils.concatAll;
+import static com.gmalandrakis.utils.Utils.flattenKey;
 import static java.lang.Math.*;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class KeyDerivation_V1 {
+public class KeyDerivation {
 
     /*
     1. Σπαμε τον δοθεντα κωδικό σε τμήματα των 256bits (32 bytes) τα οποία κάνουμε xor μεταξύ τους.
@@ -42,55 +44,14 @@ public class KeyDerivation_V1 {
 
      */
 
-    public static void main(String[] args) {
-        var s = new byte[]{0, 0, 0};
-        //var str = "TestmeTest3575fd"; //DISCREPANCY
-        //var str2 = "anothertest653";
-        //  var str = "TestmeTest3575fdTestmeTest3575fdTestmeTest3575fdTestmeTest3575fdTestmeTest3575fd";
-        // var str2 = "TestmeTest35s75fdTestfmeTest3575343fdTestmeTest3fgd575fdTes8tmeTest357df5fdTestm09eTest93575fdd";
-        var str = "0123456789ABCDEF0123456789ABCDEFGHIJKLMNOPQRSTUVGHIJKLMNOPQRSTUV";
-        var str2 = "GHIJKLMNOPQRSTUVGHIJKLMNOPQRSTUV0123456789ABCDEF0123456789ABCDEF";
-
-        System.out.println(Arrays.toString(getKeyFromInput("123".getBytes())));
-        System.out.println(Arrays.toString(getKeyFromInput(str2.getBytes())));
-        System.out.println(Arrays.toString(getKeyFromInput(s)));
-        System.out.println(Arrays.toString(getKeyFromInput(new byte[]{0, 0, 0, 0})));
-        System.out.println(Arrays.toString(getKeyFromInput(new byte[]{0, 0, 0, 1})));
-        System.out.println((getKeyFromInput(new byte[]{0, 0, 0, 0}).length));
-        System.out.println((getKeyFromInput(new byte[]{0, 0, 0, 1}).length));
-
-    }
-
-
-    public static byte[] getKeyFromInput(byte[] input) {
-        var keyAsMultiArray = deduceKey(input);
-        return flatten(keyAsMultiArray);
-    }
-
-    public static byte[] flatten(byte[][] arrayOfArrays) {
-        var result = new byte[32];
-        int i = 0;
-        for (byte[] array : arrayOfArrays) {
-            for (byte b : array) {
-                result[i] = b;
-                ++i;
-            }
-        }
-        return result;
-    }
-
-    static byte xoredLength(int originalLength) {
-        assert (originalLength > 0);
-        if (originalLength <= 127) {
-            return (byte) originalLength;
-        }
-        return originalLength % 128 != 0 ? (byte) (originalLength % 128) : 127;
+    public static byte[] deduceKey(byte[] oldByteSequence) {
+        return flattenKey(deduceKeyInternal(oldByteSequence));
     }
 
     /**
      * Takes an arbitrary byte array and returns 32-byte (256bit) key as byte[4][8].
      */
-    public static byte[][] deduceKey(byte[] oldByteSequence) {
+    static byte[][] deduceKeyInternal(byte[] oldByteSequence) {
         var originallength = oldByteSequence.length;
         var byteSequence = new byte[32];
 
@@ -104,39 +65,137 @@ public class KeyDerivation_V1 {
                 }
             }
         }
-
+/*
+    Αν το κλειδι ειναι μεγαλυτερο απο 32 βυτες,
+    1. Τα πρωτα 32 βυτες χρησιμοποιουνται για message digest A
+    Αποθηκευουμε
+    2. Τα υπολοιπα, για καθε 32αδα Ν
+        α. Αντιμετωπιζουμε καθε 8 βυτες ως signed long Τ
+        β. Πολλαπλασιαζουμε το Τ XOR N επι cos(Ν)
+        γ. xor το αποτελεσμα με το Α, και αντικατασταση του Α με το αποτελεσμα
+ */
         if (originallength > 32) {
             int parts_of_32_bytes = originallength / 32;
-            for (int i = 0; i < 32; i++) {
-                for (int j = 0; j < parts_of_32_bytes; j++) {
-                    byteSequence[i] ^= oldByteSequence[32 * j + i];
-                    byteSequence[i] ^= (byte) (j & 0xFF);
-                }
-            }
-
+            byteSequence = deduceKey(Arrays.copyOfRange(oldByteSequence, 0, 32));
+            handleLargeInput(parts_of_32_bytes, byteSequence, oldByteSequence);
             for (int j = 0; j < originallength % 32; j++) {
                 byteSequence[j] ^= oldByteSequence[32 * parts_of_32_bytes + j];
                 byteSequence[j] ^= (byte) (j & 0xFF);
             }
-
         }
 
         byte xored = xoredLength(originallength);
-
         byte[][] arrayOfArrays = new byte[4][8];
+        function2(arrayOfArrays, byteSequence, xored);
 
-        int pointer = 0; //pointer: 8*i + j
-        /*for (int i = 0; i < 4; ++i) {
+        byte[] trigonometric_1 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[0])), 12) + round(sin(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12));
+        byte[] trigonometric_2 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12) + round(sin(toSignedLong(arrayOfArrays[3])), 12));
+        byte[] tox = function3(arrayOfArrays);
+        for (int j = 0; j < 8; ++j) {
+            tox[j] = (byte) (tox[j] ^ trigonometric_1[j] ^ trigonometric_2[j]);
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            byte position_leftmostbyte_cubed = (byte) ((i * i * i) & 0xFF);
             for (int j = 0; j < 8; ++j) {
-                var a = (byte) ((i + 1) * (j + 1));
-                arrayOfArrays[i][j] = (byte) (a ^ byteSequence[pointer] ^ (xored));
-                if (pointer > 0) {
-                    arrayOfArrays[i][j] ^= (byte) (byteSequence[pointer - 1]); //arxika a ^
-                }
-                ++pointer;
+                arrayOfArrays[i][j] = (byte) (arrayOfArrays[i][j] ^ tox[j] ^ position_leftmostbyte_cubed);
             }
         }
-        arrayOfArrays[0][0] ^= byteSequence[pointer - 1];*/
+
+        return arrayOfArrays;
+    }
+
+
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+        if (places == 0) {
+            return value;
+        }
+
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    private static long toSignedLong(byte[] bytes) {
+        assert (bytes.length <= 8);
+        //We originally skipped the LITTLE ENDIAN
+        byte[] bb = new byte[8];
+
+        try {
+            for (int i = 0; i < bytes.length; i++) {
+                bb[i] = bytes[i];
+            }
+            for (int j = bytes.length; j < 8; j++) {
+                bb[j] = 0;
+            }
+
+            // return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).put(bytes).getLong(0);
+            return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
+        } catch (Exception e) {
+            System.out.println("lol");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static byte[] longToBytes(long x) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putLong(x);
+        return buffer.array();
+    }
+
+    /*static byte[] arrayFlattening(byte[][] x) {
+        ArrayList<Byte> arrayList = new ArrayList<Byte>();
+        var bytes = new byte[32];
+        Arrays.stream(x)
+                .forEach(a -> {
+                    final List<Byte> list = new ArrayList<>();
+                    for (byte b : a) {
+                        list.add(b);
+                    }
+                    arrayList.addAll(list);
+                });
+        for (int i = 0; i < 32; i++) {
+            bytes[i] = arrayList.get(i).byteValue();
+        }
+        return bytes;
+    }*/
+
+    private static byte[] doubleToBytes(double x) {
+        ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putDouble(x);
+        return buffer.array();
+    }
+
+    private static void handleLargeInput(int parts_of_32_bytes, byte[] byteSequence, byte oldByteSequence[]) {
+        for (int i = 1; i < parts_of_32_bytes; i++) {
+            var tb = Arrays.copyOfRange(byteSequence, 0, 8);
+            var a = toSignedLong(tb) + 1 * i;
+            var b = toSignedLong(Arrays.copyOfRange(byteSequence, 8, 16)) + 4 * i;
+            var c = toSignedLong(Arrays.copyOfRange(byteSequence, 16, 24)) + 9 * i;
+            var d = toSignedLong(Arrays.copyOfRange(byteSequence, 24, 32)) + 16 * i;
+            int l = 0;
+            for (int j = i * 32; j < i * 32 + 32; j++) {
+                byte byty = (byte) (i % 255);
+                byte temp = (byte) (byteSequence[l] ^ byty);
+                oldByteSequence[j] ^= temp;
+                ++l;
+            }
+
+            var bt1 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32, i * 32 + 8)) + 1) * (a));
+            long bbrb = (toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 8, i * 32 + 16)) + 4) * (b);
+            var bt2 = longToBytes(bbrb);
+            var bt3 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 16, i * 32 + 24)) + 9) * (c));
+            var bt4 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 24, i * 32 + 32)) + 16) * (d));
+            byte[] by = concatAll(bt1, bt2, bt3, bt4);
+            for (int j = 0; j < 32; j++) {
+                byteSequence[j] ^= by[j];
+            }
+        }
+    }
+
+    private static void function2(byte[][] arrayOfArrays, byte[] byteSequence, byte xored) {
+        int pointer = 0; //pointer: 8*i + j
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 8; ++j) {
                 var a = (byte) ((i + 1) * (j + 1));
@@ -152,10 +211,9 @@ public class KeyDerivation_V1 {
             }
         }
         arrayOfArrays[0][0] ^= arrayOfArrays[3][7];
+    }
 
-
-        byte[] trigonometric_1 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[0])), 12) + round(sin(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12));
-        byte[] trigonometric_2 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12) + round(sin(toSignedLong(arrayOfArrays[3])), 12));
+    private static byte[] function3(byte[][] arrayOfArrays) {
 
         byte[] bitos = new byte[4];
 
@@ -170,89 +228,17 @@ public class KeyDerivation_V1 {
         long ginomeno = first * second * third * fourth;
 
 
-        byte[] tox = longToBytes(ginomeno);
+        return longToBytes(ginomeno);
 
+    }
 
-        for (int j = 0; j < 8; ++j) {
-            tox[j] = (byte) (tox[j] ^ trigonometric_1[j] ^ trigonometric_2[j]);
+    private static byte xoredLength(int originalLength) {
+        assert (originalLength >= 0);
+        if (originalLength <= 127) {
+            return (byte) originalLength;
         }
-
-        for (int i = 0; i < 4; ++i) {
-            byte position_leftmostbyte_cubed = (byte) ((i * i * i) & 0xFF);
-            for (int j = 0; j < 8; ++j) {
-                arrayOfArrays[i][j] = (byte) (arrayOfArrays[i][j] ^ tox[j] ^ position_leftmostbyte_cubed);
-            }
-        }
-
-        return arrayOfArrays;
+        return originalLength % 128 != 0 ? (byte) (originalLength % 128) : 127;
     }
-
-    static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-        if (places == 0) {
-            return value;
-        }
-
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
-    }
-
-    static long toSignedLong(byte[] bytes) {
-        //We originall skipped the LITTLE ENDIAN
-        var r = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
-        return r;
-    }
-
-    static long toSignedLongnew(byte[] bytes) {
-        assert (bytes.length <= 8);
-        //We originally skipped the LITTLE ENDIAN
-        byte[] bb = new byte[8];
-
-        try {
-            for (int i = 0; i < bytes.length - 1; i++) {
-                bb[i] = bytes[i];
-            }
-            for (int j = bytes.length - 1; j < 8; j++) {
-                bb[j] = 0;
-            }
-            var r = ByteBuffer.wrap(bb).order(ByteOrder.LITTLE_ENDIAN).getLong();
-            return r;
-        } catch (Exception e) {
-            System.out.println("lol");
-            throw new RuntimeException(e);
-        }
-    }
-
-    static byte[] longToBytes(long x) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putLong(x);
-        return buffer.array();
-    }
-
-    static byte[] arrayFlattening(byte[][] x) {
-        ArrayList<Byte> arrayList = new ArrayList<Byte>();
-        var bytes = new byte[32];
-        Arrays.stream(x)
-                .forEach(a -> {
-                    final List<Byte> list = new ArrayList<>();
-                    for (byte b : a) {
-                        list.add(b);
-                    }
-                    arrayList.addAll(list);
-                });
-        for (int i = 0; i < 32; i++) {
-            bytes[i] = arrayList.get(i).byteValue();
-        }
-        return bytes;
-    }
-
-    static byte[] doubleToBytes(double x) {
-        ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putDouble(x);
-        return buffer.array();
-    }
-
 
 }
 

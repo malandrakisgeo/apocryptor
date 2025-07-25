@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Random;
 
-import static com.gmalandrakis.key_derivation.KeyDerivation_V2.deduceKey;
+import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 import static com.gmalandrakis.permutation.BlockPermutation.permuteBlock;
 import static com.gmalandrakis.permutation.BlockPermutation.unpermuteBlock;
 import static org.junit.jupiter.api.Assertions.assertTrue;

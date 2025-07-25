@@ -4,9 +4,19 @@ import java.util.Arrays;
 
 public class Utils {
 
+    public static long[] adjustChaffingPositions(long[] positions, long length) {
+        long totalSum = Arrays.stream(positions).sum();
+        if (totalSum >= length && (positions.length / 2)>0) {
+            return adjustChaffingPositions(Arrays.copyOf(positions, positions.length / 2), length);
+        }
+        if(totalSum>=length && positions.length == 1){
+            return new long[]{1L};
+        }
+        return positions;
+    }
+
     public static long[] chaffingPositions(byte[] byteArray) {
         long[] positions = new long[32];
-
 
         for (int j = 0; j < 32; j++) {
             long a = (long) byteArray[j];

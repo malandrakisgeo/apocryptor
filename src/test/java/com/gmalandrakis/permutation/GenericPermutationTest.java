@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import static com.gmalandrakis.key_derivation.archive.KeyDerivation_V1.getKeyFromInput;
 import static com.gmalandrakis.permutation.PermutationAlgorithm.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

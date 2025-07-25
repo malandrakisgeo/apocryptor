@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.gmalandrakis.key_derivation.archive.KeyDerivation_V1.getKeyFromInput;
+import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
+
 
 public class PermutationAlgorithm {
 
@@ -25,7 +26,7 @@ public class PermutationAlgorithm {
             var i = (int) b;
             cinco = positions.contains(i) ? cinco + 1 : 0;
             if (cinco == 5) {
-                return permuteArrayByKey(inputArray, getKeyFromInput(key)); //do for recalculated key if five consecutive numbers are the same
+                return permuteArrayByKey(inputArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(i);
             unsortedKeyBytes.add(b);
@@ -83,7 +84,7 @@ public class PermutationAlgorithm {
             var i = (int) b;
             cinco = positions.contains(i) ? cinco + 1 : 0;
             if (cinco == 4) {
-                return unpermuteArrayByKey(permutedArray, getKeyFromInput(key)); //do for recalculated key if five consecutive numbers are the same
+                return unpermuteArrayByKey(permutedArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(b);
             unsortedKeyBytes.add(b);
@@ -129,7 +130,7 @@ public class PermutationAlgorithm {
             var i = (int) b;
             cinco = positions.contains(b) ? cinco + 1 : 0;
             if (cinco == 3) {
-                return permuteArraysByKey(inputArray, getKeyFromInput(key)); //do for recalculated key if five consecutive numbers are the same
+                return permuteArraysByKey(inputArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(b);
             unsortedKeyBytes.add(b);
@@ -191,7 +192,7 @@ public class PermutationAlgorithm {
             var i = (int) b;
             cinco = positions.contains(b) ? cinco + 1 : 0;
             if (cinco == 3) {
-                return unpermuteArraysByKey(permutedArray, getKeyFromInput(key)); //do for recalculated key if five consecutive numbers are the same
+                return unpermuteArraysByKey(permutedArray, deduceKey(key)); //do for recalculated key if five consecutive numbers are the same
             }
             positions.add(b);
             unsortedKeyBytes.add(b);
@@ -251,64 +252,4 @@ public class PermutationAlgorithm {
         });
         return r;
     }
-
-    /*
-     public static byte[][] permuteArraysByKeyOLD(byte[][] inputArray, byte[] key) {
-        //TODO: TI KANOUME AN TO INPUT ARRAY EXEI TA TELEUTAIA N KENA??
-        List<Integer> positions = new ArrayList<>();
-        List<Byte> unsortedKeyBytes = new ArrayList<>();
-        byte[][] outputArray = new byte[32][];
-        var cinco = 0;
-        for (byte b : key) {
-            var i = (int) b;
-            cinco = positions.contains(i) ? cinco + 1 : 0;
-            if (cinco == 5) {
-                return permuteArraysByKey(inputArray, getKeyFromInput(key)); //do for recalculated key if five consecutive numbers are the same
-            }
-            positions.add(i);
-            unsortedKeyBytes.add(b);
-        }
-
-        positions = positions.stream().sorted().toList();
-
-        var outputArrayPos = 0;
-        for (int i = 0; i < positions.size(); i++) {
-
-            var consecutive = positions.lastIndexOf(positions.get(i)) - positions.indexOf(positions.get(i));
-            var index = unsortedKeyBytes.indexOf(positions.get(i).byteValue());
-            if (inputArray[index].length == 0) {
-                continue;
-            }
-            if (consecutive == 0) {
-                outputArray[outputArrayPos] = inputArray[index];
-                ++outputArrayPos;
-            }
-            if (consecutive == 1) {
-                outputArray[outputArrayPos] = inputArray[index + 1];
-                outputArray[++outputArrayPos] = inputArray[index];
-                ++outputArrayPos;
-                ++i;
-            }
-            if (consecutive == 2) {
-                outputArray[outputArrayPos] = inputArray[index + 2];
-                outputArray[++outputArrayPos] = inputArray[index];
-                outputArray[++outputArrayPos] = inputArray[index + 1];
-                ++outputArrayPos;
-                i += 2;
-            }
-            if (consecutive == 3) {
-                outputArray[outputArrayPos] = inputArray[index + 2];
-                outputArray[++outputArrayPos] = inputArray[index];
-                outputArray[++outputArrayPos] = inputArray[index + 3];
-                outputArray[++outputArrayPos] = inputArray[index + 1];
-                ++outputArrayPos;
-                i += 3;
-            }
-
-
-        }
-        return outputArray;
-    }
-
-     */
 }

@@ -1,12 +1,11 @@
 package com.gmalandrakis.chaffing;
 
-import com.gmalandrakis.key_derivation.KeyDerivation_V2;
-import com.gmalandrakis.utils.Utils;
-
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
+
+import static com.gmalandrakis.utils.Utils.adjustChaffingPositions;
 
 
 public class KeyBasedChaffing {
@@ -22,7 +21,7 @@ public class KeyBasedChaffing {
         }
         long totalSum = Arrays.stream(positions).sum();
         if (totalSum >= source.length()) {
-            positions = adjustPositions(positions, source.length());
+            positions = adjustChaffingPositions(positions, source.length());
         }
         long curPos = 0;
         long posSum = 0;
@@ -44,13 +43,6 @@ public class KeyBasedChaffing {
         targetChannel.close();
     }
 
-    static long[] adjustPositions(long[] positions, long length) {
-        long totalSum = Arrays.stream(positions).sum();
-        if (totalSum >= length) {
-            return adjustPositions(Arrays.copyOf(positions, positions.length / 2), length);
-        }
-        return positions;
-    }
 
     static byte[] defineContent(byte[] chaff, long[] positions, int currentPos) {
         if (positions.length == chaff.length) {

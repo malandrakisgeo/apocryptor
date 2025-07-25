@@ -8,6 +8,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 
+import static com.gmalandrakis.utils.Utils.adjustChaffingPositions;
+
 public class KeyBasedWinnowing {
 
     public static byte[] winnow(File sourceFilename, File targetFilename, long[] positions) throws Throwable {
@@ -16,8 +18,9 @@ public class KeyBasedWinnowing {
         FileChannel sourceChannel = source.getChannel();
         FileChannel targetChannel = dest.getChannel();
         long totalSum = Arrays.stream(positions).sum();
-        if (totalSum >= source.length()) {
-            positions = adjustPositions(positions, source.length() - 32);
+        System.out.println(source.length());
+        if (totalSum >= source.length() - 32) {
+            positions = adjustChaffingPositions(positions, source.length() - 32);
         }
         long curPos = 0;
         long posSum = 0;
@@ -44,13 +47,6 @@ public class KeyBasedWinnowing {
     }
 
 
-    static long[] adjustPositions(long[] positions, long length) {
-        long totalSum = Arrays.stream(positions).sum();
-        if (totalSum >= length) {
-            return adjustPositions(Arrays.copyOf(positions, positions.length / 2), length);
-        }
-        return positions;
-    }
 
 
 }

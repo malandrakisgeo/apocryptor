@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import static com.gmalandrakis.chaffing.KeyBasedChaffing.insert;
 import static com.gmalandrakis.chaffing.KeyBasedWinnowing.winnow;
-import static com.gmalandrakis.key_derivation.KeyDerivation_V2.deduceKey;
+import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 import static com.gmalandrakis.utils.Utils.*;
 
 public class APOCRYPTOR {
@@ -33,10 +33,11 @@ public class APOCRYPTOR {
 
         byte[] finalKey = encrypt(ENCRYPT_ME, ENCRYPTED_NO_CHAFFING, password);
         byte[] fileDigest = fileDigest(ENCRYPT_ME);
+        var chafPos = chaffingPositions(finalKey);
+        //var chafPos = adjustChaffingPositions(chaffingPositions(finalKey), );
+        insert(ENCRYPTED_NO_CHAFFING, ENCRYPTED_WITH_CHAFFING, fileDigest, chafPos);
 
-        insert(ENCRYPTED_NO_CHAFFING, ENCRYPTED_WITH_CHAFFING, fileDigest, chaffingPositions(finalKey));
-
-        var retrievedFileDigest = winnow(ENCRYPTED_WITH_CHAFFING, ENCRYPTED_CHAFFING_REMOVED, chaffingPositions(finalKey));
+        var retrievedFileDigest = winnow(ENCRYPTED_WITH_CHAFFING, ENCRYPTED_CHAFFING_REMOVED, chafPos);
         if (!Arrays.equals(retrievedFileDigest, fileDigest)) {
             throw new RuntimeException("Digest retrieval failed");
         }
@@ -54,10 +55,11 @@ public class APOCRYPTOR {
             throw new RuntimeException("Decryption failed");
         }
         var encrypted = finalEncryption.readAllBytes();
-        System.out.println(Arrays.toString(original));
 
-        System.out.println(Arrays.toString(encrypted));
-        System.out.println(Arrays.toString(decrypted));
+        System.out.println("Original file contents: " + Arrays.toString(original));
+
+        System.out.println("Encrypted file contents: " +Arrays.toString(encrypted));
+        System.out.println("Recovered file contents: " + Arrays.toString(decrypted));
 
         finalEncryption.close();
         originalfileInputStream.close();
@@ -172,7 +174,7 @@ public class APOCRYPTOR {
         int chunks = fileInputStream.available() / 1024;
         int extra = fileInputStream.available() % 1024;
 
-        byte[] cipher = firstXor;
+        byte[] cipher = chunks != 0 ? firstXor : new byte[1024];
         byte[] nthKey = keyDigest;
         byte originalText[];
 
@@ -211,8 +213,8 @@ public class APOCRYPTOR {
         var firstXor = deduceFirstXor(Arrays.toString(keyDigest), Arrays.toString(digestByWinnowing));
         var permutedFirstXor = BlockPermutation.permuteBlock(keyDigest, firstXor);
         assert (Arrays.equals(BlockPermutation.unpermuteBlock(keyDigest, permutedFirstXor), permutedFirstXor));
-        int chunks = fileInputStream.available() / 1024;
-        int extra = fileInputStream.available() % 1024;
+        int chunks = (fileInputStream.available()) / 1024;
+        int extra = (fileInputStream.available()) % 1024;
         /*
             1. Vres ta prwta 1024 bytes ARX kai to arxiko pad tous. Kane ta xor. Estw A to apotelesma (arxiko keimeno).
             Apothikeveis A sto arxeio.

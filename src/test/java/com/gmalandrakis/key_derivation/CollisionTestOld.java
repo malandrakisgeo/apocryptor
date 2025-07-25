@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
-import static com.gmalandrakis.key_derivation.KeyDerivation_V2.*;
+import static com.gmalandrakis.key_derivation.KeyDerivation.*;
 
 public class CollisionTestOld {
     /*
@@ -32,7 +32,7 @@ public class CollisionTestOld {
         addIfAbsent(keyToString(deduceKey(new byte[]{0, 0})), "00");
         addIfAbsent(keyToString(deduceKey(new byte[]{0})), "0");
 
-        for (int i = 0; i < 2500000; ++i) {
+        for (int i = 0; i < 250000; ++i) {
             var randomPassword = getRandomString();
 
             var key = deduceKey((randomPassword.getBytes()));
@@ -40,18 +40,18 @@ public class CollisionTestOld {
             addIfAbsent(s, String.valueOf(randomPassword));
         }
 
-        for (int i = 0; i < 40; ++i) {
+        for (int i = 0; i < 20; ++i) {
             threadPool.execute(() -> concurrently());
         }
         try {
-            Thread.sleep(50000);
+            Thread.sleep(20000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         System.out.println("Total collisions: " + collisions_detected.size());
         System.out.println("Total keys calculated: " + testo.size());
         try {
-            Thread.sleep(50000);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

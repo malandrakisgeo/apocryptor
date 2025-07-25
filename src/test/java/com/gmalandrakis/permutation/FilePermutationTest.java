@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static com.gmalandrakis.key_derivation.archive.KeyDerivation_V1.getKeyFromInput;
+import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 import static com.gmalandrakis.permutation.PermutationAlgorithm.permuteArraysByKey;
 import static com.gmalandrakis.permutation.PermutationAlgorithm.unpermuteArraysByKey;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,7 +51,7 @@ public class FilePermutationTest {
 
             }
         }
-        var k1 = getKeyFromInput("12".getBytes()); //12 gia duo cons //TODO: Me ton kwdiko 12 kapoia emfanizontai null. Giati?
+        var k1 = deduceKey("12".getBytes()); //12 gia duo cons //TODO: Me ton kwdiko 12 kapoia emfanizontai null. Giati?
 
         var permutedArray = permuteArraysByKey(fileContents, k1);
 
