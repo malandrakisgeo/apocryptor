@@ -62,16 +62,17 @@ and random from the attackers perspective, and be unbreakable.
 APOCRYPTOR is a sample implementation of this encryption mode, used just as a proof of concept.
 
 In this implementation, the message digest or the original plaintext is chaffed (dispersed) through
-the ciphertext, and winnoed (retrieved and removed from the file) right before the decryption.
-
-Blocks  of 1024 bytes are used. 
+the ciphertext, and winnowed (retrieved and removed from the file) right before the decryption. [Katakerm](https://github.com/malandrakisgeo/katakerm)
+is used as a hash function. Blocks of 1024 bytes are used. 
 
 We utilize the key and plaintext digest to generate a pad for the first block by using combinations
 of them to get some first message digests, which in turn are used to get some second message digests, and so on, until a pad of 1024 bytes
 is generated. 
 
-The permutation step is a simple shuffling of the 32byte subblocks of the n-th block depending on the n-th digest of the original key. A more complex
-permutation algorithm is under construction.
+The permutation step is a simple shuffling of the 32byte subblocks of the n-th block depending on the n-th digest of the original key. 
+The bytes of the digest are treated as integers and sorted from lowest to highest, with some special handling for repeated values. Let J the sorted
+array. Each block of the input has its' position changed depending on J (e.g. if the first value of J corresponds to the 4th value
+of the digest, the 4th block goes first). A more complex permutation algorithm is under construction.
 
 APOCRYPTOR as of 7/2025 is crudely written, and unsuitable for production use.
 
@@ -85,3 +86,6 @@ produces entirely different and apparently random ciphertexts for even the sligh
 You can modify the "ENCRYPT_ME" file under /resources and/or change the password in APOCRYPTOR.java, and see the results for yourselves, in both the
 console, and under your /target/classes.
 
+<br>
+
+&copy; George Malandrakis, 2025

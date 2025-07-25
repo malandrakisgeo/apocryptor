@@ -2,14 +2,17 @@ package com.gmalandrakis.utils;
 
 import java.util.Arrays;
 
+/**
+ * @author George Malandrakis (malandrakisgeo@gmail.com)
+ */
 public class Utils {
 
     public static long[] adjustChaffingPositions(long[] positions, long length) {
         long totalSum = Arrays.stream(positions).sum();
-        if (totalSum >= length && (positions.length / 2)>0) {
+        if (totalSum >= length && (positions.length / 2) > 0) {
             return adjustChaffingPositions(Arrays.copyOf(positions, positions.length / 2), length);
         }
-        if(totalSum>=length && positions.length == 1){
+        if (totalSum >= length && positions.length == 1) {
             return new long[]{1L};
         }
         return positions;
