@@ -9,8 +9,10 @@ which has the basic properties of a hash function. Crafting it helped me compreh
 But unlike in hash functions, it should be done in a way that does not hinder the retrieval of the original plaintext.
 
 <sup>After some weeks of trial and error, a couple of plans that were as doomed as the Coyote's, and some other eureka! moments, my solution evolved to this:
-a CBC structure with the message digest of both the plaintext and the password as initialization vector, and then just... well, just any byte-by-byte modification of the input.
+a CBC structure with the message digest of both the plaintext and the password as initialization vector*, and then just... well, just any byte-by-byte modification of the input.
 Even a simple XOR operation might suffice.
+
+*<sup><sub> After talking with professional cryptographers, the message digest of the file and the password ought to be used along with an Initialization Vector, and not replacing it.
 
 
 ### An unbreakable (?) block cipher mode of operation
@@ -24,12 +26,11 @@ The first step of the encryption is to get the message digest (or hash, as it is
 It will be used as an input to the block cipher, and can then either be stored somewhere and be given by the user as input along with the key, 
 or be chaffed (dispersed) through the ciphertext only to be winnowed (retrieved and removed) before the decryption,
 or even just be pasted as is in a header. No matter the approach, in a good cipher, knowing the original digest without knowing the password should be of no value.
+The file digest can be used as an Initialization vector, but ideally, the file digest should be with an Initialization Vector.
 
 Using the file's digest in that way makes sure that every change on the plaintext, 
 however insignificant, is cascaded onto all the ciphertext in a chaotic manner.  And no matter how many plaintexts you encrypt with the same main key, 
-they always appear as random as if they were just digests. Many major forms of cryptanalysis are already rendered useless.
-
-The file digest can be used as an Initialization vector, but ideally, the file digest should be with an Initialization Vector.
+they always appear as random as if they were just digests. Many major forms of cryptanalysis are already rendered useless. 
 
 The second step is to use the digest and the key to encrypt the first block. The first block could
 use a pad-generator along with a regular cipher, using the key and the digest to generate a unique pad of equal length to the block (as APOCRYPTOR does). 
@@ -69,7 +70,7 @@ is used as a hash function. Blocks of 1024 bytes are used.
 
 We utilize the key and plaintext digest to generate a pad for the first block by using combinations
 of them to get some first message digests, which in turn are used to get some second message digests, and so on, until a pad of 1024 bytes
-is generated. 
+is generated. Using a proper IV as an extra input parameter is a TODO.
 
 The permutation step is a simple shuffling of the 32byte subblocks of the n-th block depending on the n-th digest of the original key. 
 The bytes of the digest are treated as integers and sorted from lowest to highest, with some special handling for repeated values. Let J the sorted
