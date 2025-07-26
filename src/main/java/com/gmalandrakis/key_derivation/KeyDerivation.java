@@ -4,9 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static com.gmalandrakis.utils.Utils.concatAll;
 import static com.gmalandrakis.utils.Utils.flattenKey;
@@ -39,15 +37,7 @@ public class KeyDerivation {
                 }
             }
         }
-/*
-    Αν το κλειδι ειναι μεγαλυτερο απο 32 βυτες,
-    1. Τα πρωτα 32 βυτες χρησιμοποιουνται για message digest A
-    Αποθηκευουμε
-    2. Τα υπολοιπα, για καθε 32αδα Ν
-        α. Αντιμετωπιζουμε καθε 8 βυτες ως signed long Τ
-        β. Πολλαπλασιαζουμε το Τ XOR N επι cos(Ν)
-        γ. xor το αποτελεσμα με το Α, και αντικατασταση του Α με το αποτελεσμα
- */
+
         if (originallength > 32) {
             int parts_of_32_bytes = originallength / 32;
             byteSequence = deduceKey(Arrays.copyOfRange(oldByteSequence, 0, 32));
@@ -60,11 +50,11 @@ public class KeyDerivation {
 
         byte xored = xoredLength(originallength);
         byte[][] arrayOfArrays = new byte[4][8];
-        function2(arrayOfArrays, byteSequence, xored);
+        successiveXor(arrayOfArrays, byteSequence, xored);
 
         byte[] trigonometric_1 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[0])), 12) + round(sin(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12));
         byte[] trigonometric_2 = doubleToBytes(round(cos(toSignedLong(arrayOfArrays[1]) + toSignedLong(arrayOfArrays[2])), 12) + round(sin(toSignedLong(arrayOfArrays[3])), 12));
-        byte[] tox = function3(arrayOfArrays);
+        byte[] tox = multiplyElementsByPower(arrayOfArrays);
         for (int j = 0; j < 8; ++j) {
             tox[j] = (byte) (tox[j] ^ trigonometric_1[j] ^ trigonometric_2[j]);
         }
@@ -94,20 +84,10 @@ public class KeyDerivation {
     private static long toSignedLong(byte[] bytes) {
         assert (bytes.length <= 8);
         //We originally skipped the LITTLE ENDIAN
-        byte[] bb = new byte[8];
-
         try {
-            for (int i = 0; i < bytes.length; i++) {
-                bb[i] = bytes[i];
-            }
-            for (int j = bytes.length; j < 8; j++) {
-                bb[j] = 0;
-            }
-
             // return ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).put(bytes).getLong(0);
             return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getLong();
         } catch (Exception e) {
-            System.out.println("lol");
             throw new RuntimeException(e);
         }
     }
@@ -118,22 +98,6 @@ public class KeyDerivation {
         return buffer.array();
     }
 
-    /*static byte[] arrayFlattening(byte[][] x) {
-        ArrayList<Byte> arrayList = new ArrayList<Byte>();
-        var bytes = new byte[32];
-        Arrays.stream(x)
-                .forEach(a -> {
-                    final List<Byte> list = new ArrayList<>();
-                    for (byte b : a) {
-                        list.add(b);
-                    }
-                    arrayList.addAll(list);
-                });
-        for (int i = 0; i < 32; i++) {
-            bytes[i] = arrayList.get(i).byteValue();
-        }
-        return bytes;
-    }*/
 
     private static byte[] doubleToBytes(double x) {
         ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES).order(ByteOrder.LITTLE_ENDIAN);
@@ -157,8 +121,7 @@ public class KeyDerivation {
             }
 
             var bt1 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32, i * 32 + 8)) + 1) * (a));
-            long bbrb = (toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 8, i * 32 + 16)) + 4) * (b);
-            var bt2 = longToBytes(bbrb);
+            var bt2 = longToBytes((  (toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 8, i * 32 + 16)) + 4) * (b) ));
             var bt3 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 16, i * 32 + 24)) + 9) * (c));
             var bt4 = longToBytes((toSignedLong(Arrays.copyOfRange(oldByteSequence, i * 32 + 24, i * 32 + 32)) + 16) * (d));
             byte[] by = concatAll(bt1, bt2, bt3, bt4);
@@ -168,8 +131,8 @@ public class KeyDerivation {
         }
     }
 
-    private static void function2(byte[][] arrayOfArrays, byte[] byteSequence, byte xored) {
-        int pointer = 0; //pointer: 8*i + j
+    private static void successiveXor(byte[][] arrayOfArrays, byte[] byteSequence, byte xored) {
+        int pointer = 0;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 8; ++j) {
                 var a = (byte) ((i + 1) * (j + 1));
@@ -187,7 +150,7 @@ public class KeyDerivation {
         arrayOfArrays[0][0] ^= arrayOfArrays[3][7];
     }
 
-    private static byte[] function3(byte[][] arrayOfArrays) {
+    private static byte[] multiplyElementsByPower(byte[][] arrayOfArrays) {
 
         byte[] bitos = new byte[4];
 

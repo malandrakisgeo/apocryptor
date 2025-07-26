@@ -29,6 +29,8 @@ Using the file's digest in that way makes sure that every change on the plaintex
 however insignificant, is cascaded onto all the ciphertext in a chaotic manner.  And no matter how many plaintexts you encrypt with the same main key, 
 they always appear as random as if they were just digests. Many major forms of cryptanalysis are already rendered useless.
 
+The file digest can be used as an Initialization vector, but ideally, the file digest should be with an Initialization Vector.
+
 The second step is to use the digest and the key to encrypt the first block. The first block could
 use a pad-generator along with a regular cipher, using the key and the digest to generate a unique pad of equal length to the block (as APOCRYPTOR does). 
 Unless there is a flaw in the underlying hash function, this pad is in practice unique for every plaintext. If
