@@ -12,8 +12,9 @@ import static com.gmalandrakis.chaffing.KeyBasedChaffing.insert;
 import static com.gmalandrakis.chaffing.KeyBasedWinnowing.winnow;
 import static com.gmalandrakis.key_derivation.KeyDerivation.deduceKey;
 import static com.gmalandrakis.utils.Utils.*;
+
 /**
- *  Copyright (C) 2025 Georgios Malandrakis <malandrakisgeo@gmail.com>
+ * Copyright (C) 2025 Georgios Malandrakis <malandrakisgeo@gmail.com>
  */
 public class APOCRYPTOR {
     final static String sourceFilename = "ENCRYPT_ME";
@@ -165,9 +166,9 @@ public class APOCRYPTOR {
 
 
     public static byte[] encrypt(File inputFile, File outputFile, String key) throws Throwable {
-
         var fileDigest = fileDigest(inputFile);
-        var keyDigest = deduceKey(key.getBytes());
+
+        var keyDigest = deduceKey(initialKeyGenerator(password.getBytes(), fileDigest));
         FileInputStream fileInputStream = new FileInputStream(inputFile);
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
         var firstXor = deduceFirstXor(Arrays.toString(keyDigest), Arrays.toString(fileDigest));
@@ -187,7 +188,7 @@ public class APOCRYPTOR {
             nthKey = deduceKey(nthKey);
             fileOutputStream.write(cipher);
         }
-        //correct up to this point
+
         if (extra > 0) {
             originalText = fileInputStream.readNBytes(extra);
 
@@ -207,14 +208,16 @@ public class APOCRYPTOR {
 
 
     public static byte[] decrypt(File inputFile, File outputFile, byte[] digestByWinnowing, String password) throws Throwable {
-
-        var keyDigest = deduceKey(password.getBytes());
+        var keyDigest = deduceKey(initialKeyGenerator(password.getBytes(), digestByWinnowing));
         FileInputStream fileInputStream = new FileInputStream(inputFile);
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
 
         var firstXor = deduceFirstXor(Arrays.toString(keyDigest), Arrays.toString(digestByWinnowing));
-        var permutedFirstXor = BlockPermutation.permuteBlock(keyDigest, firstXor);
-        assert (Arrays.equals(BlockPermutation.unpermuteBlock(keyDigest, permutedFirstXor), permutedFirstXor));
+        //var permutedFirstXor = BlockPermutation.permuteBlock(keyDigest, firstXor);
+        //var unperm = BlockPermutation.unpermuteBlock(keyDigest, permutedFirstXor);
+        //if(!Arrays.equals(unperm, firstXor)){
+        //    throw new RuntimeException("PERMUTATION FAILED");
+        // }
         int chunks = (fileInputStream.available()) / 1024;
         int extra = (fileInputStream.available()) % 1024;
         /*
@@ -251,6 +254,14 @@ public class APOCRYPTOR {
         fileOutputStream.close();
         fileInputStream.close();
         return nthKey;
+    }
+
+    public static byte[] initialKeyGenerator(byte[] password, byte[] digest) {
+        byte[] keyGenerator = new byte[password.length + digest.length];
+        System.arraycopy(password, 0, keyGenerator, 0, password.length);
+        System.arraycopy(digest, 0, keyGenerator, password.length, digest.length);
+
+        return keyGenerator;
     }
 
     static void wipePrevious() throws Throwable {

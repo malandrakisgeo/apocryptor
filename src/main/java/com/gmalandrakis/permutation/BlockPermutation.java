@@ -3,12 +3,10 @@ package com.gmalandrakis.permutation;
 import java.util.Arrays;
 import java.util.Random;
 
-import static com.gmalandrakis.permutation.PermutationAlgorithm.permuteArraysByKey;
-import static com.gmalandrakis.permutation.PermutationAlgorithm.unpermuteArraysByKey;
+import static com.gmalandrakis.permutation.PermutationAlgorithm.*;
 import static com.gmalandrakis.utils.Utils.flattenPerm;
 
 /**
- *
  * @author George Malandrakis (malandrakisgeo@gmail.com)
  */
 public class BlockPermutation {
